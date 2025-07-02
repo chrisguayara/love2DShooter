@@ -9,7 +9,19 @@ local crosshair = {}
 local weapons = {}
 local currWeapon
 local projectiles = {}
-local enemies = {}
+local enemies = {
+    fleshPart = {
+        sprite = love.graphics.newImage('crossb.png'),
+        speed = 80,
+        x,y = getRanPos()
+    },
+
+    fleshJockey = {
+        sprite = love.graphics.newImage('fleshPart.png'),
+        speed = 100,
+        x, y = getRanPos()
+    }
+}
 local currEnemies = {}
 local currLevel = "level1"
 
@@ -79,6 +91,15 @@ function love.mousepressed(x, y, button)
     end
 end
 
+function getRanPos()
+    x = clamp(math.random(320) - player.x, 0, 320)
+    y = clamp(math.random(240) - player.y, 0, 240)
+    
+
+    return x,y
+end
+
+
 function love.update(dt)
     local dirX, dirY = 0, 0
     if love.keyboard.isDown("a") then dirX = dirX - 1 end
@@ -106,7 +127,7 @@ function love.update(dt)
         end
     end
 
-    for i = #currEnemies
+    -- for i = #currEnemies
 end
 
 function love.draw()
