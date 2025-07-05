@@ -9,21 +9,26 @@ local crosshair = {}
 local weapons = {}
 local currWeapon
 local projectiles = {}
-local enemies = {
-    fleshPart = {
-        sprite = love.graphics.newImage('crossb.png'),
-        speed = 80,
-        x,y = getRanPos()
-    },
 
-    fleshJockey = {
-        sprite = love.graphics.newImage('fleshPart.png'),
-        speed = 100,
-        x, y = getRanPos()
-    }
+
+local enemies ={}
+enemies.fleshPart = {
+    sprite = love.graphics.newImage("enemies/fleshPart.png"),
+    speed = 80,
+    hp = 5
 }
+
+enemies.fleshJockey = {
+    sprite = love.graphics.newImage("enemies/fleshjockey.png"),
+    speed = 100,
+    hp = 10
+}
+for _,e in pairs(enemies) do
+    e.sprite:setFilter("nearest", "nearest")
+end
 local currEnemies = {}
 local currLevel = "level1"
+
 
 
 
@@ -52,6 +57,18 @@ function love.load()
     weapons.crossbow.gunSprite:setFilter("nearest", "nearest")
 
     currWeapon = "crossbow"
+
+    local rx1, ry1 = getRanPos()
+    local rx2, ry2 = getRanPos()
+
+    enemies.fleshPart.x = rx1
+    enemies.fleshPart.y = ry1
+
+    enemies.fleshJockey.x = rx2
+    enemies.fleshJockey.y = ry2
+
+    enemySpawner("fleshPart", 1, 5)      
+    enemySpawner("fleshJockey", 2, 2) 
 
 end
 
@@ -91,12 +108,12 @@ function love.mousepressed(x, y, button)
     end
 end
 
-function getRanPos()
-    x = clamp(math.random(320) - player.x, 0, 320)
-    y = clamp(math.random(240) - player.y, 0, 240)
-    
 
-    return x,y
+function getRanPos()
+    local range = 100
+    local x = clamp(player.x + math.random(-range, range), 0, W)
+    local y = clamp(player.y + math.random(-range, range), 0, H)
+    return x, y
 end
 
 
@@ -125,6 +142,12 @@ function love.update(dt)
         if p.x < 0 or p.y < 0 or p.x > W or p.y > H then
             table.remove(projectiles, i)
         end
+    end
+
+    for _, e in ipairs(currEnemies) do
+        local dx, dy = normalize(player.x - e.x, player.y - e.y)
+        e.x = e.x + dx * e.speed * dt
+        e.y = e.y + dy * e.speed * dt
     end
 
     -- for i = #currEnemies
@@ -160,6 +183,10 @@ function love.draw()
         weapons[currWeapon].gunSprite:getWidth() / 2,
         weapons[currWeapon].gunSprite:getHeight() / 2
     )
+    love.mouse.setVisible(false)
+    for _, e in ipairs(currEnemies) do
+         love.graphics.draw(e.sprite, e.x, e.y, 0, 1, 1, e.sprite:getWidth()/2, e.sprite:getHeight()/2)
+    end
 
     for _, p in ipairs(projectiles) do
         love.graphics.draw(p.sprite, p.x, p.y, p.angle, 1, 1, p.sprite:getWidth()/2, p.sprite:getHeight()/2)
@@ -177,21 +204,29 @@ function love.draw()
         crosshair.sprite:getHeight()/2
     )
 
-    love.mouse.setVisible(false)
+    
 end
 
-function enemySpawner(currLevel)
-    local count = 0  
-    local levelCounter = 0
-    if currLevel == "level1" then
-        levelCounter = 20
-        while counter < levelCounter do
-            
-        end
+function enemySpawner(type, level, count )
+    local temp = enemies[type]
+    if not temp then
+        print ("No enemy template for type: "  , type)
+        return
+    end
 
-        table.insert(enemies, {
+    for i = 1 , count do 
+        local rx , ry = getRanPos()
+        local scaleFactor = 1 + (level * 0.1)
 
+        table.insert(currEnemies, {
+            sprite = temp.sprite,
+            speed = temp.speed * scaleFactor,
+            hp = math.floor((temp.hp or 3) * scaleFactor),
+            x = rx, 
+            y = ry,
+            type = type
         })
     end
+
 end
 
